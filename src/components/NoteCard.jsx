@@ -1,5 +1,7 @@
 import Trash from "../icons/Trash";
 import { useRef, useEffect } from "react";
+import { setNewOffset, autoGrow, setZIndex } from "../utils.js";
+
 import { useState } from "react";
 const NoteCard = ({ note }) => {
   const colors = JSON.parse(note.colors);
@@ -11,15 +13,11 @@ const NoteCard = ({ note }) => {
     autoGrow(textAreaRef);
   }, []);
 
-  function autoGrow(textAreaRef) {
-    const { current } = textAreaRef;
-    current.style.height = "auto"; // Reset the height
-    current.style.height = current.scrollHeight + "px"; // Set the new height
-  }
   let mouseStartPos = { x: 0, y: 0 };
 
   const cardRef = useRef(null);
   const mouseDown = (e) => {
+    setZIndex(cardRef.current);
     mouseStartPos.x = e.clientX;
     mouseStartPos.y = e.clientY;
 
@@ -36,12 +34,10 @@ const NoteCard = ({ note }) => {
     //2 - Update start position for next move.
     mouseStartPos.x = e.clientX;
     mouseStartPos.y = e.clientY;
-
+    const newPosition = setNewOffset(cardRef.current, mouseMoveDir);
+    setPosition(newPosition);
     //3 - Update card top and left position.
-    setPosition({
-      x: cardRef.current.offsetLeft - mouseMoveDir.x,
-      y: cardRef.current.offsetTop - mouseMoveDir.y,
-    });
+    setPosition(newPosition);
   };
   const mouseUp = () => {
     document.removeEventListener("mousemove", mouseMove);
@@ -66,6 +62,9 @@ const NoteCard = ({ note }) => {
       </div>
       <div className="card-body">
         <textarea
+          onFocus={() => {
+            setZIndex(cardRef.current);
+          }}
           ref={textAreaRef}
           style={{ color: colors.colorText }}
           defaultValue={body}
